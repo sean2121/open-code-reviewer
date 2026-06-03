@@ -1,12 +1,12 @@
 import os
 import sys
 
-from actor_review.ast_extractor import extract_from_diff_files
-from actor_review.blame import get_blame
-from actor_review.pr import get_pr_data
-from actor_review.retriever import find_fanout_files
-from actor_review.review import review_diff
-from actor_review.static_analysis import analyze_files, build_static_analysis_context
+from open_code_reviewer.ast_extractor import extract_from_diff_files
+from open_code_reviewer.blame import get_blame
+from open_code_reviewer.pr import get_pr_data, post_review
+from open_code_reviewer.retriever import find_fanout_files
+from open_code_reviewer.review import review_diff
+from open_code_reviewer.static_analysis import analyze_files, build_static_analysis_context
 
 
 def build_context(pr_data, contexts, related_files: list[dict]) -> str:
@@ -69,6 +69,7 @@ def main():
     repo_name = sys.argv[1]
     pr_number = int(sys.argv[2])
     repo_path = sys.argv[3] if len(sys.argv) > 3 else None
+    post_comment = "--comment" in sys.argv
 
     print(f"Fetching PR data for {repo_name} #{pr_number}...")
     pr_data = get_pr_data(github_token, repo_name, pr_number)
@@ -109,7 +110,13 @@ def main():
     result = review_diff(full_context)
 
     print("\n--- Review Result ---\n")
-    print(result)
+    for finding in result:
+        print(f"[{finding.get('severity','?').upper()}] {finding.get('file','')}:{finding.get('line','')} — {finding.get('message','')}")
+
+    if post_comment and result:
+        print("\nPosting review comments to GitHub...")
+        post_review(github_token, repo_name, pr_number, result)
+        print("Done.")
 
 
 if __name__ == "__main__":

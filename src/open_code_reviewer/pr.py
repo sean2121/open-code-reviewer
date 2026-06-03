@@ -104,3 +104,40 @@ def get_pr_data(token: str, repo_name: str, pr_number: int) -> PRData:
         metadata=metadata,
         files=files,
     )
+
+
+def post_review(token: str, repo_name: str, pr_number: int, findings: list[dict]) -> None:
+    gh = Github(token)
+    repo = gh.get_repo(repo_name)
+    pr = repo.get_pull(pr_number)
+    commit = repo.get_commit(pr.head.sha)
+
+    comments = []
+    for f in findings:
+        file_path = f.get("file")
+        line = f.get("line")
+        if not file_path or not line:
+            continue
+        severity = f.get("severity", "low")
+        body = f"**[{severity.upper()}]** {f.get('message', '')}"
+        comments.append({"path": file_path, "line": line, "side": "RIGHT", "body": body})
+
+    if not comments:
+        return
+
+    # try all at once; if it fails, post individually and collect failures as summary comment
+    try:
+        pr.create_review(commit=commit, comments=comments, event="COMMENT")
+    except Exception:
+        skipped = []
+        for c in comments:
+            try:
+                pr.create_review(commit=commit, comments=[c], event="COMMENT")
+            except Exception:
+                skipped.append(c)
+
+        if skipped:
+            body = "**Review findings (could not be posted as inline comments):**\n\n" + "\n\n".join(
+                f"- `{c['path']}:{c['line']}` {c['body']}" for c in skipped
+            )
+            pr.create_issue_comment(body)

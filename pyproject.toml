@@ -1,9 +1,9 @@
 [project]
-name = "actor-review"
+name = "open-code-reviewer"
 version = "0.1.0"
 description = ""
 authors = [
-    {name = "Shoji Tokunaga",email = ""}
+    {name = "Shoji Tokunaga"}
 ]
 readme = "README.md"
 requires-python = ">=3.10,<3.14"
@@ -23,7 +23,7 @@ dependencies = [
 ]
 
 [tool.poetry]
-packages = [{include = "actor_review", from = "src"}]
+packages = [{include = "open_code_reviewer", from = "src"}]
 
 
 [build-system]

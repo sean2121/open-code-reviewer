@@ -5,8 +5,8 @@ from pathlib import Path
 from bert_score import score as bert_score
 from litellm import completion
 
-from actor_review.config import JUDGE_MODEL, REVIEW_MODEL
-from actor_review.review import review_diff
+from open_code_reviewer.config import JUDGE_MODEL, REVIEW_MODEL
+from open_code_reviewer.review import review_diff
 
 
 DATA_PATH = Path(__file__).parent.parent / "data" / "Comment_Generation" / "msg-test.jsonl"
